@@ -62,3 +62,91 @@ export const hasPermission = (role: UserRole, requiredRole: UserRole): boolean =
   
   return roleHierarchy[role] >= roleHierarchy[requiredRole];
 };
+
+// Mock data for groups
+export const MOCK_GROUPS = [
+  {
+    id: "1",
+    name: "English Beginners",
+    mentorId: "2", // Sarah Teacher
+    schedule: "Mon, Wed 15:00-16:30",
+    students: [
+      {
+        id: "101",
+        name: "Alex Learner",
+        userId: "4",
+        attendance: [
+          { id: "a1", date: "2025-04-01", present: true, studentId: "101" },
+          { id: "a2", date: "2025-04-03", present: false, studentId: "101" }
+        ],
+        scores: [
+          { id: "s1", date: "2025-04-01", value: 85, studentId: "101", description: "Vocabulary test" }
+        ]
+      },
+      {
+        id: "102",
+        name: "Emma Student",
+        userId: null,
+        attendance: [
+          { id: "a3", date: "2025-04-01", present: true, studentId: "102" },
+          { id: "a4", date: "2025-04-03", present: true, studentId: "102" }
+        ],
+        scores: [
+          { id: "s2", date: "2025-04-01", value: 92, studentId: "102", description: "Vocabulary test" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "2",
+    name: "Math Advanced",
+    mentorId: "2", // Sarah Teacher
+    schedule: "Tue, Thu 17:00-18:30",
+    students: [
+      {
+        id: "103",
+        name: "Jack Math",
+        userId: null,
+        attendance: [
+          { id: "a5", date: "2025-04-02", present: true, studentId: "103" },
+          { id: "a6", date: "2025-04-04", present: true, studentId: "103" }
+        ],
+        scores: [
+          { id: "s3", date: "2025-04-02", value: 88, studentId: "103", description: "Algebra quiz" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "3",
+    name: "Programming Basics",
+    mentorId: "5", // Another mentor
+    schedule: "Mon, Fri 16:00-17:30",
+    students: []
+  }
+];
+
+// Utility functions for data management
+export const getGroupsByMentorId = (mentorId: string) => {
+  return MOCK_GROUPS.filter(group => group.mentorId === mentorId);
+};
+
+export const getGroupById = (groupId: string) => {
+  return MOCK_GROUPS.find(group => group.id === groupId);
+};
+
+export const getStudentById = (studentId: string) => {
+  for (const group of MOCK_GROUPS) {
+    const student = group.students.find(student => student.id === studentId);
+    if (student) return student;
+  }
+  return null;
+};
+
+export const getStudentByUserId = (userId: string) => {
+  for (const group of MOCK_GROUPS) {
+    const student = group.students.find(student => student.userId === userId);
+    if (student) return student;
+  }
+  return null;
+};

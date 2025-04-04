@@ -51,3 +51,27 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
 }
+
+// New interfaces for group management
+export interface GroupFormData {
+  name: string;
+  mentorId: string;
+  schedule: string;
+}
+
+export interface StudentFormData {
+  name: string;
+  userId?: string;
+}
+
+export interface AttendanceFormData {
+  date: string;
+  studentIds: Record<string, boolean>; // studentId: present
+}
+
+export interface ScoreFormData {
+  date: string;
+  studentId: string;
+  value: number;
+  description?: string;
+}
