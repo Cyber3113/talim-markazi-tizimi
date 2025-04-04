@@ -14,6 +14,7 @@ import {
   MOCK_GROUPS 
 } from '@/lib/authUtils';
 import StudentDetail from './students/StudentDetail';
+import MentorList from './mentors/MentorList';
 
 const mockStats = {
   CEO: [
@@ -56,8 +57,8 @@ const Dashboard = () => {
           <Tabs defaultValue="overview" className="space-y-4" onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="groups">Groups</TabsTrigger>
               <TabsTrigger value="mentors">Mentors</TabsTrigger>
+              <TabsTrigger value="groups">Groups</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="space-y-4">
@@ -133,21 +134,11 @@ const Dashboard = () => {
                 </Card>
               </div>
             </TabsContent>
+            <TabsContent value="mentors">
+              <MentorList />
+            </TabsContent>
             <TabsContent value="groups" className="space-y-4">
               <GroupList />
-            </TabsContent>
-            <TabsContent value="mentors">
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Mentors Management</CardTitle>
-                    <CardDescription>Add, remove or edit mentors</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">This section allows CEO to manage mentors</p>
-                  </CardContent>
-                </Card>
-              </div>
             </TabsContent>
             <TabsContent value="analytics">
               <div className="space-y-4">
