@@ -51,30 +51,6 @@ export const loginUser = async (data: LoginFormData): Promise<User | null> => {
   return null;
 };
 
-// Save user to localStorage
-export const saveUserToStorage = (user: User): void => {
-  localStorage.setItem('eduUser', JSON.stringify(user));
-};
-
-// Get user from localStorage
-export const getUserFromStorage = (): User | null => {
-  const userJson = localStorage.getItem('eduUser');
-  if (userJson) {
-    try {
-      return JSON.parse(userJson) as User;
-    } catch (e) {
-      console.error('Error parsing user from localStorage', e);
-      return null;
-    }
-  }
-  return null;
-};
-
-// Remove user from localStorage
-export const removeUserFromStorage = (): void => {
-  localStorage.removeItem('eduUser');
-};
-
 // Check if user has specific permission
 export const hasPermission = (role: UserRole, requiredRole: UserRole): boolean => {
   const roleHierarchy: Record<UserRole, number> = {
