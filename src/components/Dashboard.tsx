@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import UserProfile from './UserProfile';
@@ -16,7 +15,6 @@ import {
 } from '@/lib/authUtils';
 import StudentDetail from './students/StudentDetail';
 
-// Mock data
 const mockStats = {
   CEO: [
     { title: 'Total Students', value: '124', icon: UsersRound, color: 'text-blue-500' },
@@ -49,7 +47,6 @@ const Dashboard = () => {
     return <div>Loading...</div>;
   }
 
-  // Get role-specific data
   const stats = mockStats[user.role] || [];
 
   const renderRoleSpecificContent = () => {
@@ -81,7 +78,7 @@ const Dashboard = () => {
                         <div key={group.id} className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">{group.name}</p>
-                            <p className="text-sm text-muted-foreground">{group.studentCount || group.students.length} students</p>
+                            <p className="text-sm text-muted-foreground">{group.students.length} students</p>
                           </div>
                           <div className="flex items-center">
                             <span className="text-sm font-medium mr-2">65%</span>
@@ -140,7 +137,6 @@ const Dashboard = () => {
               <GroupList />
             </TabsContent>
             <TabsContent value="mentors">
-              {/* Mentor management content */}
               <div className="space-y-4">
                 <Card>
                   <CardHeader>
@@ -154,7 +150,6 @@ const Dashboard = () => {
               </div>
             </TabsContent>
             <TabsContent value="analytics">
-              {/* Analytics content */}
               <div className="space-y-4">
                 <Card>
                   <CardHeader>
@@ -244,7 +239,6 @@ const Dashboard = () => {
               <GroupList />
             </TabsContent>
             <TabsContent value="attendance">
-              {/* Attendance management content */}
               <Card>
                 <CardHeader>
                   <CardTitle>Attendance Management</CardTitle>
@@ -272,7 +266,6 @@ const Dashboard = () => {
               </Card>
             </TabsContent>
             <TabsContent value="scores">
-              {/* Scores management content */}
               <Card>
                 <CardHeader>
                   <CardTitle>Score Management</CardTitle>
@@ -356,7 +349,6 @@ const Dashboard = () => {
               <GroupList />
             </TabsContent>
             <TabsContent value="reports">
-              {/* Reports content */}
               <div className="space-y-4">
                 <Card>
                   <CardHeader>
@@ -391,7 +383,6 @@ const Dashboard = () => {
           );
         }
         
-        // Calculate stats
         const averageScore = student.scores.length > 0
           ? Math.round(student.scores.reduce((sum, score) => sum + score.value, 0) / student.scores.length)
           : 0;
@@ -400,7 +391,6 @@ const Dashboard = () => {
           ? Math.round((student.attendance.filter(a => a.present).length / student.attendance.length) * 100)
           : 0;
         
-        // Override default stats with actual data
         stats[0].value = `${averageScore}%`;
         stats[1].value = `${attendanceRate}%`;
         
@@ -478,7 +468,6 @@ const Dashboard = () => {
               <StudentDetail student={student} onBack={() => {}} />
             </TabsContent>
             <TabsContent value="scores">
-              {/* Scores details */}
               <Card>
                 <CardHeader>
                   <CardTitle>My Academic Scores</CardTitle>
@@ -544,7 +533,6 @@ const Dashboard = () => {
   );
 };
 
-// Stat Card Component
 const StatCard = ({ title, value, icon: Icon, color }) => {
   return (
     <Card>

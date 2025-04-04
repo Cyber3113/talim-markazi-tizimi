@@ -2,7 +2,7 @@
 import { User, LoginFormData, UserRole } from "./types";
 
 // Mock users for demonstration
-const MOCK_USERS = [
+export const MOCK_USERS = [
   {
     id: "1",
     username: "ceo",
