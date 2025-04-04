@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Group, GroupFormData } from '@/lib/types';
 import { MOCK_USERS } from '@/lib/authUtils';
 import { 
@@ -14,81 +14,102 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from '@/components/ui/select';
+import { useToast } from '@/components/ui/use-toast';
 
 interface GroupFormProps {
   group?: Group;
-  onSubmit: (group: Group) => void;
+  onSubmit: (data: GroupFormData) => void;
   onCancel: () => void;
 }
 
 const GroupForm: React.FC<GroupFormProps> = ({ group, onSubmit, onCancel }) => {
+  const { toast } = useToast();
+  const mentors = MOCK_USERS.filter(user => user.role === 'Mentor');
+  
   const [formData, setFormData] = useState<GroupFormData>({
     name: group?.name || '',
     mentorId: group?.mentorId || '',
     schedule: group?.schedule || '',
+    price: group?.price || undefined,
   });
 
   const [errors, setErrors] = useState({
     name: '',
     mentorId: '',
     schedule: '',
+    price: '',
   });
-
-  const mentors = MOCK_USERS.filter(user => user.role === 'Mentor');
-
-  const validateForm = () => {
-    const newErrors = {
-      name: formData.name ? '' : 'Group name is required',
-      mentorId: formData.mentorId ? '' : 'Mentor selection is required',
-      schedule: formData.schedule ? '' : 'Schedule is required',
-    };
-    
-    setErrors(newErrors);
-    return !Object.values(newErrors).some(error => error);
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  const handleMentorChange = (value: string) => {
-    setFormData(prev => ({ ...prev, mentorId: value }));
-    if (errors.mentorId) {
-      setErrors(prev => ({ ...prev, mentorId: '' }));
+  const handleSelectChange = (value: string, field: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    if (errors[field as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const validateForm = () => {
+    const newErrors = {
+      name: formData.name ? '' : 'Group name is required',
+      mentorId: formData.mentorId ? '' : 'Please select a mentor',
+      schedule: formData.schedule ? '' : 'Schedule is required',
+      price: '',
+    };
+    
+    if (formData.price !== undefined) {
+      const price = Number(formData.price);
+      if (isNaN(price) || price < 0) {
+        newErrors.price = 'Price must be a positive number';
+      }
+    }
+    
+    setErrors(newErrors);
+    return !Object.values(newErrors).some(error => error);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
-      onSubmit({
-        id: group?.id || '',
+      // Convert price to number
+      const submissionData = {
         ...formData,
-        students: group?.students || [],
+        price: formData.price ? Number(formData.price) : undefined,
+      };
+      
+      onSubmit(submissionData);
+      
+      toast({
+        title: group ? "Group updated" : "Group created",
+        description: `Group "${formData.name}" has been ${group ? 'updated' : 'created'} successfully.`,
       });
     }
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card>
       <form onSubmit={handleSubmit}>
         <CardHeader>
           <CardTitle>{group ? 'Edit Group' : 'Create New Group'}</CardTitle>
           <CardDescription>
             {group 
-              ? 'Update the group information below' 
-              : 'Fill in the details to create a new group'}
+              ? 'Update the group information' 
+              : 'Enter the details of the new group'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -107,15 +128,15 @@ const GroupForm: React.FC<GroupFormProps> = ({ group, onSubmit, onCancel }) => {
           
           <div className="space-y-2">
             <Label htmlFor="mentorId">Mentor</Label>
-            <Select 
-              value={formData.mentorId} 
-              onValueChange={handleMentorChange}
+            <Select
+              value={formData.mentorId}
+              onValueChange={(value) => handleSelectChange(value, 'mentorId')}
             >
               <SelectTrigger className={errors.mentorId ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Select a mentor" />
               </SelectTrigger>
               <SelectContent>
-                {mentors.map(mentor => (
+                {mentors.map((mentor) => (
                   <SelectItem key={mentor.id} value={mentor.id}>
                     {mentor.name}
                   </SelectItem>
@@ -132,10 +153,24 @@ const GroupForm: React.FC<GroupFormProps> = ({ group, onSubmit, onCancel }) => {
               name="schedule"
               value={formData.schedule}
               onChange={handleChange}
-              placeholder="E.g., Mon, Wed 15:00-16:30"
+              placeholder="e.g., Mon, Wed 15:00-16:30"
               className={errors.schedule ? 'border-red-500' : ''}
             />
             {errors.schedule && <p className="text-sm text-red-500">{errors.schedule}</p>}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="price">Price</Label>
+            <Input
+              id="price"
+              name="price"
+              type="number"
+              value={formData.price || ''}
+              onChange={handleChange}
+              placeholder="Enter group price"
+              className={errors.price ? 'border-red-500' : ''}
+            />
+            {errors.price && <p className="text-sm text-red-500">{errors.price}</p>}
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">

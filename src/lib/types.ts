@@ -14,6 +14,7 @@ export interface Group {
   mentorId: string;
   schedule: string;
   students: Student[];
+  price?: number; // Adding price field for groups
 }
 
 export interface Student {
@@ -22,6 +23,14 @@ export interface Student {
   userId?: string;
   attendance: Attendance[];
   scores: Score[];
+  // New fields
+  address?: string;
+  phone?: string;
+  parentPhone?: string;
+  age?: number;
+  groupId?: string;
+  coins?: number; // For tracking "tanga"/coins
+  rank?: number; // For tracking student ranking
 }
 
 export interface Attendance {
@@ -57,11 +66,17 @@ export interface GroupFormData {
   name: string;
   mentorId: string;
   schedule: string;
+  price?: number; // Adding price field
 }
 
 export interface StudentFormData {
   name: string;
   userId?: string;
+  address?: string;
+  phone?: string;
+  parentPhone?: string;
+  age?: number;
+  groupId?: string;
 }
 
 export interface AttendanceFormData {
@@ -74,4 +89,5 @@ export interface ScoreFormData {
   studentId: string;
   value: number;
   description?: string;
+  coins?: number; // For tracking "tanga"/coins
 }

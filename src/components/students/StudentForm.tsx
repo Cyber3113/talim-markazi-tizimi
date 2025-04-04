@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Student, StudentFormData } from '@/lib/types';
+import React, { useState, useEffect } from 'react';
+import { Student, StudentFormData, Group } from '@/lib/types';
 import { 
   Card, 
   CardContent, 
@@ -13,23 +13,39 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MOCK_GROUPS } from '@/lib/authUtils';
 
 interface StudentFormProps {
   student?: Student;
   onSubmit: (data: StudentFormData) => void;
   onCancel: () => void;
+  groupId?: string; // Optional groupId when adding a student to a specific group
 }
 
-const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel }) => {
+const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel, groupId }) => {
   const { toast } = useToast();
+  const [groups, setGroups] = useState<Group[]>(MOCK_GROUPS);
   
   const [formData, setFormData] = useState<StudentFormData>({
     name: student?.name || '',
     userId: student?.userId || undefined,
+    address: student?.address || '',
+    phone: student?.phone || '',
+    parentPhone: student?.parentPhone || '',
+    age: student?.age || undefined,
+    groupId: groupId || student?.groupId || '',
   });
 
   const [errors, setErrors] = useState({
     name: '',
+    groupId: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,9 +57,18 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel }
     }
   };
 
+  const handleSelectChange = (value: string, field: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    if (errors[field as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {
       name: formData.name ? '' : 'Student name is required',
+      groupId: formData.groupId ? '' : 'Please select a group',
     };
     
     setErrors(newErrors);
@@ -82,10 +107,75 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel }
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Enter student name"
+              placeholder="Enter student full name"
               className={errors.name ? 'border-red-500' : ''}
             />
             {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="age">Age</Label>
+            <Input
+              id="age"
+              name="age"
+              type="number"
+              value={formData.age || ''}
+              onChange={handleChange}
+              placeholder="Enter student age"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              name="address"
+              value={formData.address || ''}
+              onChange={handleChange}
+              placeholder="Enter student address"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              name="phone"
+              value={formData.phone || ''}
+              onChange={handleChange}
+              placeholder="Enter student phone number"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="parentPhone">Parent's Phone Number</Label>
+            <Input
+              id="parentPhone"
+              name="parentPhone"
+              value={formData.parentPhone || ''}
+              onChange={handleChange}
+              placeholder="Enter parent's phone number"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="groupId">Group</Label>
+            <Select
+              value={formData.groupId}
+              onValueChange={(value) => handleSelectChange(value, 'groupId')}
+            >
+              <SelectTrigger className={errors.groupId ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select a group" />
+              </SelectTrigger>
+              <SelectContent>
+                {groups.map((group) => (
+                  <SelectItem key={group.id} value={group.id}>
+                    {group.name} {group.price ? `(${group.price})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.groupId && <p className="text-sm text-red-500">{errors.groupId}</p>}
           </div>
           
           <div className="space-y-2">

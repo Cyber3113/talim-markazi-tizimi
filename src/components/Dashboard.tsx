@@ -11,10 +11,12 @@ import GroupList from './groups/GroupList';
 import { 
   getGroupsByMentorId, 
   getStudentByUserId, 
-  MOCK_GROUPS 
+  MOCK_GROUPS,
+  getTopStudents
 } from '@/lib/authUtils';
 import StudentDetail from './students/StudentDetail';
 import MentorList from './mentors/MentorList';
+import TopStudents from './dashboard/TopStudents';
 
 const mockStats = {
   CEO: [
@@ -48,7 +50,14 @@ const Dashboard = () => {
     return <div>Loading...</div>;
   }
 
-  const stats = mockStats[user.role] || [];
+  // Update statistics based on actual data
+  const stats = [...mockStats[user.role]] || [];
+  
+  if (user.role === 'CEO') {
+    // Update with actual counts
+    stats[0].value = MOCK_GROUPS.reduce((sum, group) => sum + group.students.length, 0).toString();
+    stats[1].value = MOCK_GROUPS.length.toString();
+  }
 
   const renderRoleSpecificContent = () => {
     switch (user.role) {
@@ -59,6 +68,7 @@ const Dashboard = () => {
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="mentors">Mentors</TabsTrigger>
               <TabsTrigger value="groups">Groups</TabsTrigger>
+              <TabsTrigger value="top-students">Top Students</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="space-y-4">
@@ -82,56 +92,16 @@ const Dashboard = () => {
                             <p className="text-sm text-muted-foreground">{group.students.length} students</p>
                           </div>
                           <div className="flex items-center">
-                            <span className="text-sm font-medium mr-2">65%</span>
-                            <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-edu-primary rounded-full" 
-                                style={{ width: '65%' }} 
-                              />
-                            </div>
+                            <span className="text-sm font-medium mr-2">
+                              {group.price ? `${group.price}` : 'N/A'}
+                            </span>
                           </div>
                         </div>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Latest Activity</CardTitle>
-                    <CardDescription>Recent actions in the system</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-start space-x-3">
-                        <div className="p-2 bg-blue-100 rounded-full">
-                          <User2 className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">New student registered</p>
-                          <p className="text-sm text-muted-foreground">Today at 09:42 AM</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="p-2 bg-green-100 rounded-full">
-                          <Layers className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">New group created</p>
-                          <p className="text-sm text-muted-foreground">Yesterday at 03:15 PM</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="p-2 bg-purple-100 rounded-full">
-                          <CalendarCheck className="h-4 w-4 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">Attendance records updated</p>
-                          <p className="text-sm text-muted-foreground">Yesterday at 02:30 PM</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <TopStudents />
               </div>
             </TabsContent>
             <TabsContent value="mentors">
@@ -139,6 +109,9 @@ const Dashboard = () => {
             </TabsContent>
             <TabsContent value="groups" className="space-y-4">
               <GroupList />
+            </TabsContent>
+            <TabsContent value="top-students">
+              <TopStudents />
             </TabsContent>
             <TabsContent value="analytics">
               <div className="space-y-4">
@@ -230,58 +203,10 @@ const Dashboard = () => {
               <GroupList />
             </TabsContent>
             <TabsContent value="attendance">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Attendance Management</CardTitle>
-                  <CardDescription>Record and track student attendance</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4">Select a group to manage attendance:</p>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {mentorGroups.map(group => (
-                      <Card key={group.id} className="cursor-pointer hover:bg-muted transition-colors">
-                        <CardHeader className="pb-2">
-                          <CardTitle>{group.name}</CardTitle>
-                          <CardDescription>{group.schedule}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Students:</span>
-                            <span className="text-sm font-medium">{group.students.length}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <GroupList />
             </TabsContent>
             <TabsContent value="scores">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Score Management</CardTitle>
-                  <CardDescription>Assign and manage student scores</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4">Select a group to manage student scores:</p>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {mentorGroups.map(group => (
-                      <Card key={group.id} className="cursor-pointer hover:bg-muted transition-colors">
-                        <CardHeader className="pb-2">
-                          <CardTitle>{group.name}</CardTitle>
-                          <CardDescription>{group.schedule}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Students:</span>
-                            <span className="text-sm font-medium">{group.students.length}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <GroupList />
             </TabsContent>
           </Tabs>
         );
@@ -385,6 +310,10 @@ const Dashboard = () => {
         stats[0].value = `${averageScore}%`;
         stats[1].value = `${attendanceRate}%`;
         
+        // Get student rank
+        const topStudents = getTopStudents();
+        const studentRank = topStudents.find(s => s.id === student.id)?.rank || 'N/A';
+        
         return (
           <Tabs defaultValue="overview" className="space-y-4" onValueChange={setActiveTab}>
             <TabsList>
@@ -427,29 +356,49 @@ const Dashboard = () => {
                 </Card>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Recent Scores</CardTitle>
-                    <CardDescription>Your latest test scores</CardDescription>
+                    <CardTitle>My Performance</CardTitle>
+                    <CardDescription>Your latest achievements</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {student.scores.slice(-4).map((score, index) => (
-                        <div key={score.id} className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium">{score.description || 'Score'}</p>
-                            <p className="text-xs text-muted-foreground">{new Date(score.date).toLocaleDateString()}</p>
-                          </div>
-                          <div>
-                            <span className={`text-sm font-medium px-2 py-1 rounded ${
-                              score.value >= 90 ? 'bg-green-100 text-green-800' :
-                              score.value >= 80 ? 'bg-blue-100 text-blue-800' :
-                              score.value >= 70 ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {score.value}%
-                            </span>
-                          </div>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">Coins</p>
+                          <p className="text-xs text-muted-foreground">Your total earned coins</p>
                         </div>
-                      ))}
+                        <div>
+                          <Badge variant="outline" className="bg-yellow-50">
+                            <Award className="inline-block mr-1 h-3 w-3 text-yellow-500" />
+                            {student.coins || 0}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">Ranking</p>
+                          <p className="text-xs text-muted-foreground">Your position among all students</p>
+                        </div>
+                        <div>
+                          <Badge variant="outline">
+                            #{studentRank}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">Average Score</p>
+                          <p className="text-xs text-muted-foreground">Your average test score</p>
+                        </div>
+                        <div>
+                          <Badge variant={
+                            averageScore >= 90 ? 'default' :
+                            averageScore >= 70 ? 'secondary' :
+                            'destructive'
+                          }>
+                            {averageScore}%
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
