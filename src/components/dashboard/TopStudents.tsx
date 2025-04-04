@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Award, Users } from 'lucide-react';
+import { Award, Users, Coins } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const TopStudents = () => {
@@ -40,7 +40,12 @@ const TopStudents = () => {
                   <TableHead className="w-[50px]">Rank</TableHead>
                   <TableHead>Student</TableHead>
                   <TableHead>Group</TableHead>
-                  <TableHead className="text-right">Coins</TableHead>
+                  <TableHead className="text-right">
+                    <div className="flex items-center justify-end">
+                      <Coins className="h-4 w-4 mr-1" />
+                      Coins
+                    </div>
+                  </TableHead>
                   <TableHead className="text-right">Attendance</TableHead>
                 </TableRow>
               </TableHeader>

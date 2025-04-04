@@ -1,8 +1,10 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import UserProfile from './UserProfile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { 
   UsersRound, Book, CalendarCheck, Award, 
   Layers, BookOpen, BarChart, User2 

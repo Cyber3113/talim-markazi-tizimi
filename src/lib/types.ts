@@ -6,6 +6,11 @@ export interface User {
   username: string;
   role: UserRole;
   name: string;
+  // New fields for mentors
+  phone?: string;
+  age?: string | number;
+  email?: string;
+  address?: string;
 }
 
 export interface Group {

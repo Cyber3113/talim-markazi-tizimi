@@ -12,13 +12,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 interface MentorFormProps {
   mentor?: User;
@@ -32,12 +25,17 @@ const MentorForm: React.FC<MentorFormProps> = ({ mentor, onSubmit, onCancel }) =
     username: mentor?.username || '',
     password: '', // We'll include password for new mentors
     role: 'Mentor' as UserRole,
+    phone: mentor?.phone || '',
+    age: mentor?.age || '',
+    email: mentor?.email || '',
+    address: mentor?.address || '',
   });
 
   const [errors, setErrors] = useState({
     name: '',
     username: '',
     password: '',
+    phone: '',
   });
 
   const validateForm = () => {
@@ -45,6 +43,7 @@ const MentorForm: React.FC<MentorFormProps> = ({ mentor, onSubmit, onCancel }) =
       name: formData.name ? '' : 'Mentor name is required',
       username: formData.username ? '' : 'Username is required',
       password: !mentor && !formData.password ? 'Password is required for new mentors' : '',
+      phone: formData.phone ? '' : 'Phone number is required',
     };
     
     setErrors(newErrors);
@@ -93,6 +92,54 @@ const MentorForm: React.FC<MentorFormProps> = ({ mentor, onSubmit, onCancel }) =
               className={errors.name ? 'border-red-500' : ''}
             />
             {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter phone number"
+              className={errors.phone ? 'border-red-500' : ''}
+            />
+            {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="age">Age</Label>
+            <Input
+              id="age"
+              name="age"
+              type="number"
+              value={formData.age}
+              onChange={handleChange}
+              placeholder="Enter age"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email (Optional)</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter email address"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="address">Address (Optional)</Label>
+            <Input
+              id="address"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              placeholder="Enter address"
+            />
           </div>
           
           <div className="space-y-2">

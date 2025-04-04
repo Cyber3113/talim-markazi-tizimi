@@ -1,5 +1,5 @@
 
-import { User, LoginFormData, UserRole, Group } from "./types";
+import { User, LoginFormData, UserRole, Group, Student } from "./types";
 
 // Mock users for demonstration
 export const MOCK_USERS = [
@@ -8,28 +8,44 @@ export const MOCK_USERS = [
     username: "ceo",
     password: "ceo123",
     role: "CEO" as UserRole,
-    name: "John Director"
+    name: "John Director",
+    phone: "+998901234560",
+    age: 45,
+    email: "ceo@example.com",
+    address: "123 CEO Street"
   },
   {
     id: "2",
     username: "mentor",
     password: "mentor123",
     role: "Mentor" as UserRole,
-    name: "Sarah Teacher"
+    name: "Sarah Teacher",
+    phone: "+998901234561",
+    age: 35,
+    email: "mentor@example.com",
+    address: "456 Mentor Avenue"
   },
   {
     id: "3",
     username: "admin",
     password: "admin123",
     role: "Admin" as UserRole,
-    name: "Mike Manager"
+    name: "Mike Manager",
+    phone: "+998901234562",
+    age: 40,
+    email: "admin@example.com",
+    address: "789 Admin Road"
   },
   {
     id: "4",
     username: "student",
     password: "student123",
     role: "Student" as UserRole,
-    name: "Alex Learner"
+    name: "Alex Learner",
+    phone: "+998901234563",
+    age: 16,
+    email: "student@example.com",
+    address: "101 Student Lane"
   }
 ];
 
