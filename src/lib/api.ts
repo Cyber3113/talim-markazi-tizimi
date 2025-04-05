@@ -2,7 +2,7 @@
 import { User, Group, Student, LoginFormData, UserRole, Attendance, Score } from "./types";
 
 // Base API URL - replace with actual backend URL
-const API_BASE_URL = "https://itbrain-training-center.herokuapp.com/api"; // or your actual deployment URL
+const API_BASE_URL = "http://127.0.0.1:8000/api"; // or your actual deployment URL
 
 // Helper function for API requests
 const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
@@ -135,56 +135,56 @@ export const apiGetCurrentUser = async (): Promise<User | null> => {
 
 // Groups endpoints
 export const apiGetGroups = async (): Promise<Group[]> => {
-  return await fetchApi("/groups/");
+  return await fetchApi("/group/");
 };
 
 export const apiGetGroupById = async (id: string): Promise<Group> => {
-  return await fetchApi(`/groups/${id}/`);
+  return await fetchApi(`/group/${id}/`);
 };
 
 export const apiCreateGroup = async (data: Partial<Group>): Promise<Group> => {
-  return await fetchApi("/groups/", {
+  return await fetchApi("/group/", {
     method: "POST",
     body: JSON.stringify(data),
   });
 };
 
 export const apiUpdateGroup = async (id: string, data: Partial<Group>): Promise<Group> => {
-  return await fetchApi(`/groups/${id}/`, {
+  return await fetchApi(`/group/${id}/`, {
     method: "PUT",
     body: JSON.stringify(data),
   });
 };
 
 export const apiDeleteGroup = async (id: string): Promise<void> => {
-  await fetchApi(`/groups/${id}/`, { method: "DELETE" });
+  await fetchApi(`/group/${id}/`, { method: "DELETE" });
 };
 
 // Students endpoints
 export const apiGetStudents = async (): Promise<Student[]> => {
-  return await fetchApi("/students/");
+  return await fetchApi("/student/");
 };
 
 export const apiGetStudentById = async (id: string): Promise<Student> => {
-  return await fetchApi(`/students/${id}/`);
+  return await fetchApi(`/student/${id}/`);
 };
 
 export const apiCreateStudent = async (data: Partial<Student>): Promise<Student> => {
-  return await fetchApi("/students/", {
+  return await fetchApi("/student/", {
     method: "POST",
     body: JSON.stringify(data),
   });
 };
 
 export const apiUpdateStudent = async (id: string, data: Partial<Student>): Promise<Student> => {
-  return await fetchApi(`/students/${id}/`, {
+  return await fetchApi(`/student/${id}/`, {
     method: "PUT",
     body: JSON.stringify(data),
   });
 };
 
 export const apiDeleteStudent = async (id: string): Promise<void> => {
-  await fetchApi(`/students/${id}/`, { method: "DELETE" });
+  await fetchApi(`/student/${id}/`, { method: "DELETE" });
 };
 
 // Attendance endpoints
@@ -242,7 +242,7 @@ export const apiAddScore = async (data: {
 
 // Top students
 export const apiGetTopStudents = async (limit = 10): Promise<Student[]> => {
-  return await fetchApi(`/students/top/?limit=${limit}`);
+  return await fetchApi(`/student/top/?limit=${limit}`);
 };
 
 // Mentor endpoints

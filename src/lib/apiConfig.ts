@@ -8,7 +8,7 @@
 
 export const API_CONFIG = {
   // Default to local development
-  API_BASE_URL: "http://localhost:8000/api",
+  API_BASE_URL: "http://127.0.0.1:8000/api",
   
   // For production
   // API_BASE_URL: "https://api.itbrain-training.example.com/api",

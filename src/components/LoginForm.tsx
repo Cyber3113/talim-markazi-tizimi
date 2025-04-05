@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -18,11 +17,12 @@ const formSchema = z.object({
 });
 
 const LoginForm = () => {
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const form = useForm<LoginFormData>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: '',
@@ -32,19 +32,21 @@ const LoginForm = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
+    setError(null);
+  
     try {
       const success = await login(data);
       if (success) {
-        // Navigate to dashboard
-        navigate('/dashboard');
+        navigate('/dashboard'); // Rolga qarab yo'naltirish uchun
       }
     } catch (error) {
-      console.error("Login submission error:", error);
+      setError(error.response?.data?.detail || 'Login yoki parol xato!');
     } finally {
       setIsLoading(false);
     }
   };
 
+  
   return (
     <Card className="w-full max-w-md mx-auto shadow-lg border-t-4 border-t-edu-primary">
       <CardHeader className="space-y-1">
@@ -101,6 +103,11 @@ const LoginForm = () => {
                 </FormItem>
               )}
             />
+            {error && (
+              <div className="text-red-500 text-sm text-center">
+                {error}
+              </div>
+            )}
             <Button 
               type="submit" 
               className="w-full bg-edu-primary hover:bg-edu-dark"

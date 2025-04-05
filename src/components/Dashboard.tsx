@@ -1,94 +1,133 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import UserProfile from './UserProfile';
 import { 
   UsersRound, Book, CalendarCheck, Award, 
   Layers, BookOpen, BarChart, User2 
 } from 'lucide-react';
-import { 
-  getGroupsByMentorId, 
-  getStudentByUserId, 
-  MOCK_GROUPS,
-  getTopStudents
-} from '@/lib/authUtils';
 import CEODashboard from './dashboard/CEODashboard';
 import MentorDashboard from './dashboard/MentorDashboard';
 import AdminDashboard from './dashboard/AdminDashboard';
 import StudentDashboard from './dashboard/StudentDashboard';
+import { useNavigate } from 'react-router-dom';
 
-const mockStats = {
+const initialStats = {
   CEO: [
-    { title: 'Total Students', value: '124', icon: UsersRound, color: 'text-blue-500' },
-    { title: 'Active Groups', value: '8', icon: Layers, color: 'text-green-500' },
-    { title: 'Mentors', value: '6', icon: User2, color: 'text-purple-500' },
-    { title: 'Courses', value: '12', icon: BookOpen, color: 'text-orange-500' },
+    { title: 'Total Students', value: '0', icon: UsersRound, color: 'text-blue-500' },
+    { title: 'Active Groups', value: '0', icon: Layers, color: 'text-green-500' },
+    { title: 'Mentors', value: '0', icon: User2, color: 'text-purple-500' },
+    { title: 'Courses', value: '0', icon: BookOpen, color: 'text-orange-500' },
   ],
   Admin: [
-    { title: 'Active Groups', value: '8', icon: Layers, color: 'text-green-500' },
-    { title: 'Today\'s Attendance', value: '88%', icon: CalendarCheck, color: 'text-blue-500' },
-    { title: 'Upcoming Exams', value: '3', icon: Book, color: 'text-red-500' },
+    { title: 'Active Groups', value: '0', icon: Layers, color: 'text-green-500' },
+    { title: "Today's Attendance", value: '0%', icon: CalendarCheck, color: 'text-blue-500' },
+    { title: 'Upcoming Exams', value: '0', icon: Book, color: 'text-red-500' },
   ],
   Mentor: [
-    { title: 'My Groups', value: '2', icon: Layers, color: 'text-green-500' },
-    { title: 'My Students', value: '37', icon: UsersRound, color: 'text-blue-500' },
-    { title: 'Assignments', value: '5', icon: Book, color: 'text-orange-500' },
+    { title: 'My Groups', value: '0', icon: Layers, color: 'text-green-500' },
+    { title: 'My Students', value: '0', icon: UsersRound, color: 'text-blue-500' },
+    { title: 'Assignments', value: '0', icon: Book, color: 'text-orange-500' },
   ],
   Student: [
-    { title: 'Average Score', value: '85%', icon: Award, color: 'text-yellow-500' },
-    { title: 'Attendance', value: '92%', icon: CalendarCheck, color: 'text-green-500' },
-    { title: 'Upcoming Tests', value: '2', icon: Book, color: 'text-red-500' },
-  ]
+    { title: 'Average Score', value: '0%', icon: Award, color: 'text-yellow-500' },
+    { title: 'Attendance', value: '0%', icon: CalendarCheck, color: 'text-green-500' },
+    { title: 'Upcoming Tests', value: '0', icon: Book, color: 'text-red-500' },
+  ],
 };
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, tokens, apiRequest, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [stats, setStats] = useState(initialStats);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  if (!user) {
-    return <div>Loading...</div>;
-  }
-
-  // Update statistics based on actual data
-  const stats = [...mockStats[user.role]];
-  
-  if (user.role === 'CEO') {
-    // Update with actual counts
-    stats[0].value = MOCK_GROUPS.reduce((sum, group) => sum + group.students.length, 0).toString();
-    stats[1].value = MOCK_GROUPS.length.toString();
-  }
-
-  if (user.role === 'Student') {
-    const student = getStudentByUserId(user.id);
-    
-    if (student) {
-      const averageScore = student.scores.length > 0
-        ? Math.round(student.scores.reduce((sum, score) => sum + score.value, 0) / student.scores.length)
-        : 0;
-      
-      const attendanceRate = student.attendance.length > 0
-        ? Math.round((student.attendance.filter(a => a.present).length / student.attendance.length) * 100)
-        : 0;
-      
-      stats[0].value = `${averageScore}%`;
-      stats[1].value = `${attendanceRate}%`;
+  useEffect(() => {
+    if (!tokens?.access || !user) {
+      navigate('/login');
+      return;
     }
-  }
+
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        let updatedStats = { ...stats };
+
+        switch (user.role) {
+          case 'CEO':
+            const students = await apiRequest('get', '/api/student/');
+            const groups = await apiRequest('get', '/api/group/');
+            const mentors = await apiRequest('get', '/api/mentors');
+            updatedStats.CEO[0].value = students.length.toString();
+            updatedStats.CEO[1].value = groups.length.toString();
+            updatedStats.CEO[2].value = mentors.length.toString();
+            break;
+
+          case 'Admin':
+            const adminGroups = await apiRequest('get', '/api/group/');
+            const attendance = await apiRequest('get', '/api/attendance/');
+            updatedStats.Admin[0].value = adminGroups.length.toString();
+            updatedStats.Admin[1].value = `${attendance.rate || 0}%`;
+            break;
+
+          case 'Mentor':
+            const mentorGroups = await apiRequest('get', `/api/groups/mentor/${user.id}/`);
+            const mentorStudents = await apiRequest('get', `/api/students/mentor/${user.id}/`);
+            const assignments = await apiRequest('get', `/api/assignments/mentor/${user.id}/`);
+            updatedStats.Mentor[0].value = mentorGroups.length.toString();
+            updatedStats.Mentor[1].value = mentorStudents.length.toString();
+            updatedStats.Mentor[2].value = assignments.length.toString();
+            break;
+
+          case 'Student':
+            const studentData = await apiRequest('get', `/api/students/${user.id}/`);
+            updatedStats.Student[0].value = `${studentData.average_score || 0}%`;
+            updatedStats.Student[1].value = `${studentData.attendance_rate || 0}%`;
+            const upcomingTests = await apiRequest('get', `/api/tests/student/${user.id}/upcoming/`);
+            updatedStats.Student[2].value = upcomingTests.length.toString();
+            break;
+
+          default:
+            console.warn('Unknown role:', user.role);
+        }
+
+        setStats(updatedStats);
+      } catch (error) {
+        console.error('Dashboard ma\'lumotlarini olish xatosi:', error);
+        if (error.response?.status === 401) {
+          logout();
+          navigate('/login');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user, tokens, apiRequest, navigate, logout]);
 
   const renderDashboardByRole = () => {
-    switch (user.role) {
+    if (loading) {
+      return <div>Loading...</div>;
+    }
+
+    switch (user?.role) {
       case 'CEO':
-        return <CEODashboard stats={stats} onTabChange={setActiveTab} />;
+        return <CEODashboard stats={stats.CEO} onTabChange={setActiveTab} />;
       case 'Mentor':
-        return <MentorDashboard stats={stats} userId={user.id} onTabChange={setActiveTab} />;
+        return <MentorDashboard stats={stats.Mentor} userId={user.id} onTabChange={setActiveTab} />;
       case 'Admin':
-        return <AdminDashboard stats={stats} onTabChange={setActiveTab} />;
+        return <AdminDashboard stats={stats.Admin} onTabChange={setActiveTab} />;
       case 'Student':
-        return <StudentDashboard stats={stats} userId={user.id} onTabChange={setActiveTab} />;
+        return <StudentDashboard stats={stats.Student} userId={user.id} onTabChange={setActiveTab} />;
       default:
         return <div>Unknown role</div>;
     }
   };
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="space-y-4">

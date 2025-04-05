@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -12,18 +11,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LogOut, Menu, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface NavbarProps {
   toggleSidebar?: () => void;
 }
 
 const Navbar = ({ toggleSidebar }: NavbarProps) => {
-  const { user, logout } = useAuth();
+  const { user, logout, tokens } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
+    navigate('/login'); // Logoutdan keyin login sahifasiga yo'naltirish
   };
 
   const toggleMenu = () => {
@@ -74,7 +75,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
         </div>
 
         <div className="flex items-center lg:order-2">
-          {user ? (
+          {user && tokens?.access ? (
             <div className="flex items-center space-x-3">
               <div className="hidden md:flex items-center">
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
@@ -86,24 +87,29 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-9 w-9">
-                      <AvatarImage src={`https://ui-avatars.com/api/?name=${user.name}&background=random`} alt={user.name} />
-                      <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                      <AvatarImage
+                        src={`https://ui-avatars.com/api/?name=${user.username}&background=random`}
+                        alt={user.username}
+                      />
+                      <AvatarFallback>{getInitials(user.username)}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-sm font-medium leading-none">{user.username}</p>
                       <p className="text-xs leading-none text-muted-foreground">
                         @{user.username}
                       </p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                  <DropdownMenuItem className="cursor-pointer" asChild>
+                    <Link to="/profile">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
@@ -114,7 +120,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
               </DropdownMenu>
             </div>
           ) : (
-            <Link to="/">
+            <Link to="/login">
               <Button variant="default" className="bg-edu-primary hover:bg-edu-dark">
                 Login
               </Button>
