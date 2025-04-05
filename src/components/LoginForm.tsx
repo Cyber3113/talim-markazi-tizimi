@@ -32,11 +32,16 @@ const LoginForm = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
-    const success = await login(data);
-    if (success) {
-      navigate('/dashboard');
+    try {
+      const success = await login(data);
+      if (success) {
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error("Login submission error:", error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (

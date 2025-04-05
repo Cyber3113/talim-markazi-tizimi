@@ -13,17 +13,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for saved token and get current user on mount
+    // Check for saved tokens and get current user on mount
     const fetchCurrentUser = async () => {
       try {
-        const currentUser = await apiGetCurrentUser();
-        if (currentUser) {
-          setUser(currentUser);
+        // Only attempt to fetch user if we have an access token
+        if (localStorage.getItem('eduAccessToken')) {
+          const currentUser = await apiGetCurrentUser();
+          if (currentUser) {
+            setUser(currentUser);
+          }
         }
       } catch (error) {
         console.error('Error loading user:', error);
         // Clear any invalid tokens
-        localStorage.removeItem('eduToken');
+        localStorage.removeItem('eduAccessToken');
+        localStorage.removeItem('eduRefreshToken');
       } finally {
         setIsLoading(false);
       }

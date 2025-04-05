@@ -39,4 +39,14 @@ export const initializeApi = () => {
   // Get API URL from environment or use default
   const apiUrl = import.meta.env.VITE_API_BASE_URL || API_CONFIG.API_BASE_URL;
   configureApi(apiUrl);
+  
+  // Expose API_BASE_URL to the api.ts file
+  return API_CONFIG.API_BASE_URL;
+};
+
+/**
+ * Get the configured API base URL
+ */
+export const getApiBaseUrl = () => {
+  return API_CONFIG.API_BASE_URL;
 };

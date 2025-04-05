@@ -7,12 +7,12 @@ const API_BASE_URL = "https://itbrain-training-center.herokuapp.com/api"; // or 
 // Helper function for API requests
 const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
   // Get token from localStorage if available
-  const token = localStorage.getItem("eduToken");
+  const token = localStorage.getItem("eduAccessToken");
   
   // Default headers
   const headers = {
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `Token ${token}` } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
   
@@ -25,10 +25,17 @@ const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
     if (!response.ok) {
       // Handle different error statuses
       if (response.status === 401) {
-        // Unauthorized - clear token and redirect to login
-        localStorage.removeItem("eduToken");
-        localStorage.removeItem("eduUser");
-        window.location.href = "/";
+        // Token expired - try to refresh the token
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          // Retry the request with the new token
+          return fetchApi(endpoint, options);
+        } else {
+          // Refresh failed - logout
+          localStorage.removeItem("eduAccessToken");
+          localStorage.removeItem("eduRefreshToken");
+          window.location.href = "/";
+        }
       }
       
       // Try to get error message from response
@@ -45,24 +52,75 @@ const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
   }
 };
 
+// Function to refresh the access token
+const refreshAccessToken = async (): Promise<boolean> => {
+  const refreshToken = localStorage.getItem("eduRefreshToken");
+  if (!refreshToken) return false;
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refresh: refreshToken }),
+    });
+    
+    if (!response.ok) {
+      return false;
+    }
+    
+    const data = await response.json();
+    if (data.access) {
+      localStorage.setItem("eduAccessToken", data.access);
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Failed to refresh token:", error);
+    return false;
+  }
+};
+
 // Auth endpoints
 export const apiLogin = async (data: LoginFormData) => {
-  const response = await fetchApi("/auth/login/", {
+  const response = await fetch(`${API_BASE_URL}/auth/login/`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(data),
   });
   
-  if (response.token) {
-    localStorage.setItem("eduToken", response.token);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Login Error: ${response.status}`);
   }
   
-  return response;
+  const responseData = await response.json();
+  
+  if (responseData.access && responseData.refresh) {
+    localStorage.setItem("eduAccessToken", responseData.access);
+    localStorage.setItem("eduRefreshToken", responseData.refresh);
+    return {
+      token: responseData.access,
+      user: responseData.user,
+    };
+  }
+  
+  throw new Error("Invalid response from login API");
 };
 
 export const apiLogout = async () => {
-  await fetchApi("/auth/logout/", { method: "POST" });
-  localStorage.removeItem("eduToken");
-  localStorage.removeItem("eduUser");
+  try {
+    await fetchApi("/auth/logout/", { method: "POST" });
+  } catch (error) {
+    console.error("Logout error:", error);
+  } finally {
+    localStorage.removeItem("eduAccessToken");
+    localStorage.removeItem("eduRefreshToken");
+  }
 };
 
 export const apiGetCurrentUser = async (): Promise<User | null> => {
