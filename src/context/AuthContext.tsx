@@ -21,6 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const currentUser = await apiGetCurrentUser();
           if (currentUser) {
             setUser(currentUser);
+            console.log("Current user role:", currentUser.role);
           }
         }
       } catch (error) {
@@ -42,6 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await apiLogin(data);
       if (response && response.user) {
         setUser(response.user);
+        console.log("Login successful. User role:", response.user.role);
         toast({
           title: "Login successful",
           description: `Welcome back, ${response.user.name}!`,

@@ -18,7 +18,7 @@ const formSchema = z.object({
 });
 
 const LoginForm = () => {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -35,6 +35,7 @@ const LoginForm = () => {
     try {
       const success = await login(data);
       if (success) {
+        // Navigate to dashboard
         navigate('/dashboard');
       }
     } catch (error) {

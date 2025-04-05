@@ -6,14 +6,19 @@ import Dashboard from '@/components/Dashboard';
 import Navbar from '@/components/Navbar';
 
 const DashboardPage = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // If not authenticated, redirect to login
     if (!isLoading && !isAuthenticated) {
       navigate('/');
+      return;
     }
-  }, [isAuthenticated, isLoading, navigate]);
+
+    // Additional role-based redirects could be added here in the future
+    // For example, if certain roles should only access specific sections
+  }, [isAuthenticated, isLoading, navigate, user]);
 
   if (isLoading) {
     return (
