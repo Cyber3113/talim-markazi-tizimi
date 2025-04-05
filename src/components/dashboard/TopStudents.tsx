@@ -1,6 +1,7 @@
 
-import React from 'react';
-import { getTopStudents } from '@/lib/authUtils';
+import React, { useState, useEffect } from 'react';
+import { apiGetTopStudents } from '@/lib/api';
+import { Student } from '@/lib/types';
 import { 
   Card, 
   CardContent, 
@@ -20,7 +21,27 @@ import { Award, Users, Coins } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const TopStudents = () => {
-  const topStudents = getTopStudents(10);
+  const [topStudents, setTopStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTopStudents = async () => {
+      try {
+        setIsLoading(true);
+        const students = await apiGetTopStudents(10);
+        setTopStudents(students);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch top students:', err);
+        setError('Failed to load top students data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTopStudents();
+  }, []);
 
   return (
     <Card>
@@ -32,7 +53,13 @@ const TopStudents = () => {
         <CardDescription>Students ranked by performance and attendance</CardDescription>
       </CardHeader>
       <CardContent>
-        {topStudents.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-edu-primary"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-6 text-red-500">{error}</div>
+        ) : topStudents.length > 0 ? (
           <div className="border rounded-md overflow-hidden">
             <Table>
               <TableHeader>
@@ -50,22 +77,24 @@ const TopStudents = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topStudents.map((student) => (
+                {topStudents.map((student, index) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">
                       <Badge variant={
-                        student.rank === 1 ? 'default' : 
-                        student.rank <= 3 ? 'secondary' : 
+                        index === 0 ? 'default' : 
+                        index <= 2 ? 'secondary' : 
                         'outline'
                       }>
-                        {student.rank}
+                        {index + 1}
                       </Badge>
                     </TableCell>
                     <TableCell>{student.name}</TableCell>
                     <TableCell>{student.groupId}</TableCell>
                     <TableCell className="text-right">{student.coins || 0}</TableCell>
                     <TableCell className="text-right">
-                      {Math.round(student.attendanceRate || 0)}%
+                      {student.attendance && student.attendance.length > 0
+                        ? Math.round((student.attendance.filter(a => a.present).length / student.attendance.length) * 100)
+                        : 0}%
                     </TableCell>
                   </TableRow>
                 ))}

@@ -1,80 +1,10 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { User, LoginFormData, AuthContextType } from '@/lib/types';
-import { loginUser } from '@/lib/authUtils';
 import { useToast } from '@/components/ui/use-toast';
+import { apiLogin, apiGetCurrentUser, apiLogout } from '@/lib/api';
 
-// Create an object to store user data in memory when localStorage is unavailable
-const memoryStorage = {
-  user: null as User | null,
-  setUser: function(user: User | null) {
-    this.user = user;
-  },
-  getUser: function() {
-    return this.user;
-  },
-  removeUser: function() {
-    this.user = null;
-  }
-};
-
-// Safe storage utilities that will fallback to memory storage if localStorage is unavailable
-const safeStorage = {
-  getItem: function(key: string): string | null {
-    try {
-      return localStorage.getItem(key);
-    } catch (e) {
-      console.warn('localStorage is not available, using memory storage instead');
-      if (key === 'eduUser') {
-        return memoryStorage.getUser() ? JSON.stringify(memoryStorage.getUser()) : null;
-      }
-      return null;
-    }
-  },
-  setItem: function(key: string, value: string): void {
-    try {
-      localStorage.setItem(key, value);
-    } catch (e) {
-      console.warn('localStorage is not available, using memory storage instead');
-      if (key === 'eduUser') {
-        memoryStorage.setUser(JSON.parse(value));
-      }
-    }
-  },
-  removeItem: function(key: string): void {
-    try {
-      localStorage.removeItem(key);
-    } catch (e) {
-      console.warn('localStorage is not available, using memory storage instead');
-      if (key === 'eduUser') {
-        memoryStorage.removeUser();
-      }
-    }
-  }
-};
-
-// Safe implementation of storage functions
-const saveUserToStorage = (user: User): void => {
-  safeStorage.setItem('eduUser', JSON.stringify(user));
-};
-
-const getUserFromStorage = (): User | null => {
-  const userJson = safeStorage.getItem('eduUser');
-  if (userJson) {
-    try {
-      return JSON.parse(userJson) as User;
-    } catch (e) {
-      console.error('Error parsing user from storage', e);
-      return null;
-    }
-  }
-  return null;
-};
-
-const removeUserFromStorage = (): void => {
-  safeStorage.removeItem('eduUser');
-};
-
+// Create the AuthContext
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -83,33 +13,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for saved user on mount
-    try {
-      const savedUser = getUserFromStorage();
-      if (savedUser) {
-        setUser(savedUser);
+    // Check for saved token and get current user on mount
+    const fetchCurrentUser = async () => {
+      try {
+        const currentUser = await apiGetCurrentUser();
+        if (currentUser) {
+          setUser(currentUser);
+        }
+      } catch (error) {
+        console.error('Error loading user:', error);
+        // Clear any invalid tokens
+        localStorage.removeItem('eduToken');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading user from storage:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    fetchCurrentUser();
   }, []);
 
   const login = async (data: LoginFormData): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const loggedInUser = await loginUser(data);
-      if (loggedInUser) {
-        setUser(loggedInUser);
-        try {
-          saveUserToStorage(loggedInUser);
-        } catch (error) {
-          console.error('Error saving user to storage:', error);
-        }
+      const response = await apiLogin(data);
+      if (response && response.user) {
+        setUser(response.user);
         toast({
           title: "Login successful",
-          description: `Welcome back, ${loggedInUser.name}!`,
+          description: `Welcome back, ${response.user.name}!`,
         });
         setIsLoading(false);
         return true;
@@ -134,17 +65,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
     try {
-      removeUserFromStorage();
+      await apiLogout();
     } catch (error) {
-      console.error('Error removing user from storage:', error);
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully",
+      });
     }
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
   };
 
   const value = {

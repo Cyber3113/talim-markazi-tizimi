@@ -107,8 +107,7 @@ const LoginForm = () => {
       </CardContent>
       <CardFooter className="flex justify-center text-sm text-gray-600">
         <div className="text-center space-y-2">
-          <p>For demo: Try usernames: ceo, mentor, admin, student</p>
-          <p>With passwords: ceo123, mentor123, admin123, student123</p>
+          <p>Connect to the ITBrain Training Center API</p>
         </div>
       </CardFooter>
     </Card>
