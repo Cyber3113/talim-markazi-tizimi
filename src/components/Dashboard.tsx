@@ -53,7 +53,7 @@ const Dashboard = () => {
   }
 
   // Update statistics based on actual data
-  const stats = [...mockStats[user.role]] || [];
+  const stats = [...mockStats[user.role]];
   
   if (user.role === 'CEO') {
     // Update with actual counts

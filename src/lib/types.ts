@@ -1,4 +1,3 @@
-
 export type UserRole = 'CEO' | 'Mentor' | 'Admin' | 'Student';
 
 export interface User {
@@ -11,6 +10,7 @@ export interface User {
   age?: string | number;
   email?: string;
   address?: string;
+  password?: string; // Adding password field for creating users
 }
 
 export interface Group {
@@ -36,6 +36,8 @@ export interface Student {
   groupId?: string;
   coins?: number; // For tracking "tanga"/coins
   rank?: number; // For tracking student ranking
+  username?: string; // Add username field
+  password?: string; // Add password field for creating users
 }
 
 export interface Attendance {
@@ -82,6 +84,8 @@ export interface StudentFormData {
   parentPhone?: string;
   age?: number;
   groupId?: string;
+  username?: string; // Add username field
+  password?: string; // Add password field
 }
 
 export interface AttendanceFormData {

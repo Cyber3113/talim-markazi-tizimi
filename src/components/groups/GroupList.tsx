@@ -11,13 +11,16 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, UserPlus, Edit, Trash2, Eye, Award } from 'lucide-react';
+import { Users, UserPlus, Edit, Trash2, Eye, Award, Check, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import GroupForm from './GroupForm';
 import StudentForm from '../students/StudentForm';
 import StudentDetail from '../students/StudentDetail';
+import AttendanceForm from '../attendance/AttendanceForm';
 import AttendanceList from '../attendance/AttendanceList';
 import { format } from 'date-fns';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 
 const GroupList = () => {
   const { user } = useAuth();
@@ -29,6 +32,24 @@ const GroupList = () => {
   const [isAddingStudent, setIsAddingStudent] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [viewType, setViewType] = useState<'details' | 'attendance' | 'scores'>('details');
+  const [isEditingStudent, setIsEditingStudent] = useState(false);
+  const [quickAttendance, setQuickAttendance] = useState<Record<string, boolean>>({});
+  const [quickCoins, setQuickCoins] = useState<Record<string, number>>({});
+
+  // Initialize quick attendance and coins when group is selected
+  React.useEffect(() => {
+    if (selectedGroup) {
+      const initialAttendance = Object.fromEntries(
+        selectedGroup.students.map(student => [student.id, false])
+      );
+      const initialCoins = Object.fromEntries(
+        selectedGroup.students.map(student => [student.id, 0])
+      );
+      
+      setQuickAttendance(initialAttendance);
+      setQuickCoins(initialCoins);
+    }
+  }, [selectedGroup]);
 
   const handleAddGroup = (newGroup: Group) => {
     setGroups([...groups, { ...newGroup, id: Date.now().toString(), students: [] }]);
@@ -83,6 +104,8 @@ const GroupList = () => {
       attendance: [],
       scores: [],
       coins: 0,
+      username: studentData.username,
+      password: studentData.password,
     };
     
     const updatedGroup = {
@@ -100,6 +123,47 @@ const GroupList = () => {
     toast({
       title: "Student added",
       description: `${studentData.name} has been added to ${selectedGroup.name}`,
+    });
+  };
+
+  const handleEditStudent = (student: Student) => {
+    setSelectedStudent(student);
+    setIsEditingStudent(true);
+  };
+
+  const handleUpdateStudent = (studentData) => {
+    if (!selectedGroup || !selectedStudent) return;
+    
+    const updatedStudent = {
+      ...selectedStudent,
+      name: studentData.name,
+      userId: studentData.userId,
+      address: studentData.address,
+      phone: studentData.phone,
+      parentPhone: studentData.parentPhone,
+      age: studentData.age,
+      username: studentData.username,
+      password: studentData.password || selectedStudent.password,
+    };
+    
+    const updatedGroup = {
+      ...selectedGroup,
+      students: selectedGroup.students.map(student => 
+        student.id === selectedStudent.id ? updatedStudent : student
+      ),
+    };
+    
+    setGroups(groups.map(group => 
+      group.id === selectedGroup.id ? updatedGroup : group
+    ));
+    
+    setSelectedGroup(updatedGroup);
+    setSelectedStudent(null);
+    setIsEditingStudent(false);
+    
+    toast({
+      title: "Student updated",
+      description: `${studentData.name} has been updated successfully`,
     });
   };
 
@@ -141,6 +205,179 @@ const GroupList = () => {
     setViewType('details');
   };
 
+  const handleQuickAttendanceChange = (studentId: string, isPresent: boolean) => {
+    setQuickAttendance(prev => ({
+      ...prev,
+      [studentId]: isPresent
+    }));
+    
+    // Show toast notification
+    toast({
+      title: isPresent ? "Marked as present" : "Marked as absent",
+      description: `Student attendance updated for today (${format(new Date(), 'MMM d, yyyy')})`,
+    });
+    
+    // Create a new attendance record for today
+    if (!selectedGroup) return;
+    
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const student = selectedGroup.students.find(s => s.id === studentId);
+    
+    if (student) {
+      // Check if there's already an attendance record for today
+      const existingRecord = student.attendance.find(a => a.date === today);
+      
+      if (existingRecord) {
+        // Update existing record
+        const updatedStudent = {
+          ...student,
+          attendance: student.attendance.map(a => 
+            a.date === today ? { ...a, present: isPresent } : a
+          )
+        };
+        
+        const updatedGroup = {
+          ...selectedGroup,
+          students: selectedGroup.students.map(s => 
+            s.id === studentId ? updatedStudent : s
+          )
+        };
+        
+        setSelectedGroup(updatedGroup);
+        setGroups(groups.map(group => 
+          group.id === updatedGroup.id ? updatedGroup : group
+        ));
+      } else {
+        // Create new record
+        const newAttendance = {
+          id: Date.now().toString(),
+          date: today,
+          present: isPresent,
+          studentId
+        };
+        
+        const updatedStudent = {
+          ...student,
+          attendance: [...student.attendance, newAttendance]
+        };
+        
+        const updatedGroup = {
+          ...selectedGroup,
+          students: selectedGroup.students.map(s => 
+            s.id === studentId ? updatedStudent : s
+          )
+        };
+        
+        setSelectedGroup(updatedGroup);
+        setGroups(groups.map(group => 
+          group.id === updatedGroup.id ? updatedGroup : group
+        ));
+      }
+    }
+  };
+
+  const handleQuickCoinsChange = (studentId: string, coinsValue: string) => {
+    const coins = parseInt(coinsValue) || 0;
+    setQuickCoins(prev => ({
+      ...prev,
+      [studentId]: coins
+    }));
+  };
+
+  const handleSaveQuickCoins = (studentId: string) => {
+    if (!selectedGroup) return;
+    
+    const student = selectedGroup.students.find(s => s.id === studentId);
+    if (student) {
+      const coins = quickCoins[studentId] || 0;
+      
+      if (coins > 0) {
+        const updatedStudent = {
+          ...student,
+          coins: (student.coins || 0) + coins
+        };
+        
+        const updatedGroup = {
+          ...selectedGroup,
+          students: selectedGroup.students.map(s => 
+            s.id === studentId ? updatedStudent : s
+          )
+        };
+        
+        setSelectedGroup(updatedGroup);
+        setGroups(groups.map(group => 
+          group.id === updatedGroup.id ? updatedGroup : group
+        ));
+        
+        // Reset the input after adding
+        setQuickCoins(prev => ({
+          ...prev,
+          [studentId]: 0
+        }));
+        
+        toast({
+          title: "Coins added",
+          description: `${coins} coins added to ${student.name}`,
+        });
+      }
+    }
+  };
+
+  const handleSubmitAttendance = (attendanceData) => {
+    if (!selectedGroup) return;
+    
+    const { date, studentIds } = attendanceData;
+    
+    // Create attendance records for each student
+    const updatedStudents = selectedGroup.students.map(student => {
+      const isPresent = studentIds[student.id] || false;
+      const coinsToAdd = isPresent ? (quickCoins[student.id] || 0) : 0;
+      
+      // Check if there's already an attendance record for this date
+      const existingRecord = student.attendance.find(a => a.date === date);
+      
+      let newAttendance;
+      if (existingRecord) {
+        // Update existing record
+        newAttendance = student.attendance.map(a => 
+          a.date === date ? { ...a, present: isPresent } : a
+        );
+      } else {
+        // Create new record
+        const newRecord = {
+          id: Date.now().toString() + student.id,
+          date,
+          present: isPresent,
+          studentId: student.id
+        };
+        newAttendance = [...student.attendance, newRecord];
+      }
+      
+      return {
+        ...student,
+        attendance: newAttendance,
+        coins: (student.coins || 0) + coinsToAdd
+      };
+    });
+    
+    const updatedGroup = {
+      ...selectedGroup,
+      students: updatedStudents
+    };
+    
+    setGroups(groups.map(group => 
+      group.id === selectedGroup.id ? updatedGroup : group
+    ));
+    
+    setSelectedGroup(updatedGroup);
+    setViewType('details');
+    
+    toast({
+      title: "Attendance recorded",
+      description: `Attendance for ${format(new Date(date), 'MMMM d, yyyy')} has been saved`,
+    });
+  };
+
   if (isAddingGroup) {
     return <GroupForm onSubmit={handleAddGroup} onCancel={() => setIsAddingGroup(false)} />;
   }
@@ -154,6 +391,15 @@ const GroupList = () => {
       onSubmit={handleSubmitNewStudent} 
       onCancel={() => setIsAddingStudent(false)} 
       groupId={selectedGroup?.id}
+    />;
+  }
+
+  if (isEditingStudent && selectedStudent) {
+    return <StudentForm 
+      student={selectedStudent}
+      onSubmit={handleUpdateStudent} 
+      onCancel={() => setIsEditingStudent(false)} 
+      groupId={selectedStudent.groupId}
     />;
   }
 
@@ -227,7 +473,7 @@ const GroupList = () => {
                 {selectedGroup.students.length > 0 ? (
                   <div className="space-y-4">
                     {selectedGroup.students.map(student => (
-                      <div key={student.id} className="flex justify-between items-center p-3 border rounded-md">
+                      <div key={student.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 border rounded-md gap-2">
                         <div>
                           <p className="font-medium">{student.name}</p>
                           <div className="flex space-x-4 text-sm text-muted-foreground">
@@ -235,13 +481,52 @@ const GroupList = () => {
                             <span>Coins: {student.coins || 0}</span>
                           </div>
                         </div>
-                        <div className="flex space-x-2">
+                        
+                        {(user?.role === 'Mentor' || user?.role === 'CEO') && (
+                          <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`quick-attendance-${student.id}`}
+                                checked={quickAttendance[student.id] || false}
+                                onCheckedChange={(checked) => 
+                                  handleQuickAttendanceChange(student.id, checked as boolean)
+                                }
+                              />
+                              <label 
+                                htmlFor={`quick-attendance-${student.id}`}
+                                className="text-sm cursor-pointer"
+                              >
+                                Present
+                              </label>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <Input
+                                type="number"
+                                min="0"
+                                className="w-16 h-8"
+                                value={quickCoins[student.id] || ''}
+                                onChange={(e) => handleQuickCoinsChange(student.id, e.target.value)}
+                                placeholder="Coins"
+                              />
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleSaveQuickCoins(student.id)}
+                              >
+                                Add
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="flex space-x-2 mt-2 md:mt-0">
                           <Button variant="outline" size="icon" onClick={() => handleViewStudent(student)}>
                             <Eye className="h-4 w-4" />
                           </Button>
                           {(user?.role === 'CEO' || user?.role === 'Mentor' || user?.role === 'Admin') && (
                             <>
-                              <Button variant="outline" size="icon">
+                              <Button variant="outline" size="icon" onClick={() => handleEditStudent(student)}>
                                 <Edit className="h-4 w-4" />
                               </Button>
                               <Button variant="outline" size="icon" onClick={() => handleDeleteStudent(student.id)}>
@@ -276,10 +561,7 @@ const GroupList = () => {
           <AttendanceForm 
             group={selectedGroup} 
             onBack={() => setViewType('details')}
-            onSubmit={(attendanceData) => {
-              // Handle attendance submission
-              setViewType('details');
-            }} 
+            onSubmit={handleSubmitAttendance}
           />
         )}
       </div>

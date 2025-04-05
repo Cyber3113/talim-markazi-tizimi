@@ -41,11 +41,15 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel, 
     parentPhone: student?.parentPhone || '',
     age: student?.age || undefined,
     groupId: groupId || student?.groupId || '',
+    username: student?.username || '',
+    password: student?.password || '',
   });
 
   const [errors, setErrors] = useState({
     name: '',
     groupId: '',
+    username: '',
+    password: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,6 +73,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel, 
     const newErrors = {
       name: formData.name ? '' : 'Student name is required',
       groupId: formData.groupId ? '' : 'Please select a group',
+      username: formData.username ? '' : 'Username is required',
+      password: !student && !formData.password ? 'Password is required for new students' : '',
     };
     
     setErrors(newErrors);
@@ -111,6 +117,35 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel, 
               className={errors.name ? 'border-red-500' : ''}
             />
             {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              name="username"
+              value={formData.username || ''}
+              onChange={handleChange}
+              placeholder="Enter username for login"
+              className={errors.username ? 'border-red-500' : ''}
+            />
+            {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="password">
+              {student ? 'Password (leave empty to keep current)' : 'Password'}
+            </Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password || ''}
+              onChange={handleChange}
+              placeholder={student ? "Leave empty to keep current password" : "Enter password"}
+              className={errors.password ? 'border-red-500' : ''}
+            />
+            {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
           </div>
           
           <div className="space-y-2">
@@ -180,7 +215,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel, 
           
           <div className="space-y-2">
             <Label htmlFor="userId">
-              User ID (Optional - for linking to a user account)
+              User ID (Optional - for linking to an existing user account)
             </Label>
             <Input
               id="userId"

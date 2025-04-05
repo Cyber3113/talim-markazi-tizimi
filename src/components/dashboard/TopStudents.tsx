@@ -65,7 +65,7 @@ const TopStudents = () => {
                     <TableCell>{student.groupId}</TableCell>
                     <TableCell className="text-right">{student.coins || 0}</TableCell>
                     <TableCell className="text-right">
-                      {Math.round(student.attendanceRate)}%
+                      {Math.round(student.attendanceRate || 0)}%
                     </TableCell>
                   </TableRow>
                 ))}

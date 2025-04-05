@@ -54,7 +54,8 @@ export const loginUser = async (data: LoginFormData): Promise<User | null> => {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 800));
   
-  const user = MOCK_USERS.find(
+  // First check normal users
+  let user = MOCK_USERS.find(
     user => user.username === data.username && user.password === data.password
   );
   
@@ -62,6 +63,25 @@ export const loginUser = async (data: LoginFormData): Promise<User | null> => {
     // Remove password before returning user data
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword as User;
+  }
+  
+  // If not found in MOCK_USERS, check if it's a student
+  const allStudents = getAllStudents();
+  const student = allStudents.find(
+    student => student.username === data.username && student.password === data.password
+  );
+  
+  if (student) {
+    // Create a user object from student data
+    return {
+      id: student.id,
+      username: student.username || data.username,
+      role: 'Student' as UserRole,
+      name: student.name,
+      phone: student.phone,
+      age: student.age,
+      address: student.address
+    };
   }
   
   return null;
@@ -98,6 +118,8 @@ export const MOCK_GROUPS: Group[] = [
         age: 15,
         groupId: "1",
         coins: 25,
+        username: "alex",
+        password: "alex123",
         attendance: [
           { id: "a1", date: "2025-04-01", present: true, studentId: "101" },
           { id: "a2", date: "2025-04-03", present: false, studentId: "101" }
@@ -116,6 +138,8 @@ export const MOCK_GROUPS: Group[] = [
         age: 16,
         groupId: "1",
         coins: 30,
+        username: "emma",
+        password: "emma123",
         attendance: [
           { id: "a3", date: "2025-04-01", present: true, studentId: "102" },
           { id: "a4", date: "2025-04-03", present: true, studentId: "102" }
@@ -143,6 +167,8 @@ export const MOCK_GROUPS: Group[] = [
         age: 17,
         groupId: "2",
         coins: 15,
+        username: "jack",
+        password: "jack123",
         attendance: [
           { id: "a5", date: "2025-04-02", present: true, studentId: "103" },
           { id: "a6", date: "2025-04-04", present: true, studentId: "103" }
