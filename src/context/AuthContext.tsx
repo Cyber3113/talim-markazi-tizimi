@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       if (tokens?.access) {
         try {
-          const response = await apiRequest('get', '/api/auth/user/');
+          const response = await apiRequest('get', '/auth/user/');
           setUser(response);
         } catch (error) {
           console.error('User verification failed:', error);
