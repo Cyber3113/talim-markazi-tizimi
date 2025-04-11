@@ -8,6 +8,13 @@ import MentorDashboard from '@/components/dashboard/MentorDashboard';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 import StudentDashboard from '@/components/dashboard/StudentDashboard';
 import { Toaster } from "@/components/ui/toaster";
+import { useEffect } from 'react';
+import { initializeApi } from '@/lib/apiConfig';
+
+// Initialize API configuration
+useEffect(() => {
+  initializeApi();
+}, []);
 
 const PrivateRoute = ({ children, allowedRoles }: { children: JSX.Element; allowedRoles: string[] }) => {
   const { user, tokens, loading } = useAuth();

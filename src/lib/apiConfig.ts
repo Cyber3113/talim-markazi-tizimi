@@ -7,11 +7,11 @@
  */
 
 export const API_CONFIG = {
-  // Default to local development
+  // Default to local FastAPI development server
   API_BASE_URL: "http://127.0.0.1:8000/api",
   
   // For production
-  // API_BASE_URL: "https://api.itbrain-training.example.com/api",
+  // API_BASE_URL: "https://your-fastapi-server.com/api",
 };
 
 /**
@@ -26,7 +26,7 @@ export const configureApi = (baseUrl?: string) => {
   // Auto-detect environment
   if (import.meta.env.PROD) {
     // When in production, could switch to production URL if not specified
-    // API_CONFIG.API_BASE_URL = "https://api.itbrain-training.example.com/api";
+    // API_CONFIG.API_BASE_URL = "https://your-fastapi-server.com/api";
   }
   
   console.log(`API configured with base URL: ${API_CONFIG.API_BASE_URL}`);
