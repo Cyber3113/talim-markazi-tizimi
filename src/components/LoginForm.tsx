@@ -34,19 +34,24 @@ const LoginForm = () => {
   });
 
   const onSubmit = async (data: LoginFormData) => {
+    if (isLoading) return; // Prevent multiple submissions
+    
     setIsLoading(true);
     setError(null);
   
     try {
+      console.log("Attempting login with:", data.username);
       const success = await login(data);
+      
       if (success) {
         toast({
           title: "Login successful",
           description: "You have been logged in successfully.",
         });
-        navigate('/dashboard'); // Redirect based on role
+        navigate('/dashboard');
       }
     } catch (error) {
+      console.error("Login error:", error);
       setError(error.response?.data?.detail || 'Login yoki parol xato!');
       toast({
         title: "Login failed",
@@ -58,7 +63,6 @@ const LoginForm = () => {
     }
   };
 
-  
   return (
     <Card className="w-full max-w-md mx-auto shadow-lg border-t-4 border-t-edu-primary">
       <CardHeader className="space-y-1">
@@ -133,6 +137,7 @@ const LoginForm = () => {
       <CardFooter className="flex justify-center text-sm text-gray-600">
         <div className="text-center space-y-2">
           <p>Connect to the ITBrain Training Center API</p>
+          <p className="text-xs text-gray-500">Default: admin / admin123</p>
         </div>
       </CardFooter>
     </Card>

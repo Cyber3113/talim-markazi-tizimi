@@ -67,17 +67,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check if we already have tokens and try to get user data
     const checkAuth = async () => {
       setLoading(true);
+      console.log("Checking authentication status...");
+      
       if (tokens?.access) {
+        console.log("Token found, verifying user...");
         try {
           const response = await apiRequest('get', '/auth/user/');
+          console.log("User verification successful:", response);
           setUser(response);
         } catch (error) {
           console.error('User verification failed:', error);
+          // Clear invalid tokens
           setTokens(null);
           safeLocalStorage.removeItem('accessToken');
           safeLocalStorage.removeItem('refreshToken');
         }
+      } else {
+        console.log("No tokens found");
       }
+      
       setLoading(false);
     };
 
@@ -86,15 +94,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshAccessToken = async () => {
     try {
+      console.log("Attempting to refresh access token...");
       const response = await axios.post(`${apiBaseUrl}/token/refresh/`, {
         refresh: tokens?.refresh,
       });
+      
       const newAccessToken = response.data.access;
+      console.log("Token refresh successful");
+      
       setTokens((prev) => ({ ...prev, access: newAccessToken }));
       safeLocalStorage.setItem('accessToken', newAccessToken);
       return newAccessToken;
     } catch (error) {
-      console.error('Token yangilash xatosi:', error);
+      console.error('Token refresh failed:', error);
       logout();
       return null;
     }
@@ -102,6 +114,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (data: { username: string; password: string }) => {
     setLoading(true);
+    console.log("Login attempt for:", data.username);
+    
     try {
       const response = await axios.post(`${apiBaseUrl}/auth/login/`, {
         username: data.username,
@@ -109,19 +123,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       const { access, refresh, user: userData } = response.data;
+      
+      console.log("Login successful. User role:", userData?.role);
+      
       setTokens({ access, refresh });
       setUser(userData);
 
       safeLocalStorage.setItem('accessToken', access);
       safeLocalStorage.setItem('refreshToken', refresh);
 
-      console.log('Foydalanuvchi ma\'lumotlari:', userData);
-      console.log('Access Token:', access);
-      console.log('Refresh Token:', refresh);
-
       return true;
     } catch (error) {
-      console.error('Login xatosi:', error.response?.data || error.message);
+      console.error('Login error:', error.response?.data || error.message);
       throw error;
     } finally {
       setLoading(false);
@@ -129,6 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    console.log("Logging out user");
     setUser(null);
     setTokens(null);
     safeLocalStorage.removeItem('accessToken');
@@ -146,9 +160,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         data,
       };
 
+      console.log(`Making API request: ${method.toUpperCase()} ${url}`);
       let response = await axios(config);
 
       if (response.status === 401) {
+        console.log("Token expired, attempting refresh");
         const newAccessToken = await refreshAccessToken();
         if (newAccessToken) {
           config.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -158,7 +174,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return response.data;
     } catch (error) {
-      console.error('API so\'rov xatosi:', error.response?.data || error.message);
+      console.error('API request error:', error.response?.data || error.message);
       throw error;
     }
   };

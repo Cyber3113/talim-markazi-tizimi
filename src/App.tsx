@@ -74,7 +74,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginForm />} />
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<RedirectToRoleDashboard />} />
             <Route
               path="/dashboard/ceo"
               element={
