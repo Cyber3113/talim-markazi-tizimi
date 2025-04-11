@@ -1,5 +1,7 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface AuthContextType {
   user: any;
@@ -8,26 +10,76 @@ interface AuthContextType {
   logout: () => void;
   apiRequest: (method: string, url: string, data?: any) => Promise<any>;
   loading: boolean;
+  isAuthenticated?: boolean;
+  isLoading?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Safe localStorage access function
+const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      return localStorage.getItem(key);
+    } catch (error) {
+      console.warn('localStorage access denied:', error);
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+      console.warn('localStorage access denied:', error);
+    }
+  },
+  removeItem: (key: string): void => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn('localStorage access denied:', error);
+    }
+  }
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [tokens, setTokens] = useState<{ access: string | null; refresh: string | null } | null>({
-    access: localStorage.getItem('accessToken'),
-    refresh: localStorage.getItem('refreshToken'),
+    access: safeLocalStorage.getItem('accessToken'),
+    refresh: safeLocalStorage.getItem('refreshToken'),
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const apiBaseUrl = getApiBaseUrl();
+
+  useEffect(() => {
+    // Check if we already have tokens and try to get user data
+    const checkAuth = async () => {
+      setLoading(true);
+      if (tokens?.access) {
+        try {
+          const response = await apiRequest('get', '/api/auth/user/');
+          setUser(response);
+        } catch (error) {
+          console.error('User verification failed:', error);
+          setTokens(null);
+          safeLocalStorage.removeItem('accessToken');
+          safeLocalStorage.removeItem('refreshToken');
+        }
+      }
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, []);
 
   const refreshAccessToken = async () => {
     try {
-      const response = await axios.post('http://localhost:8000/api/token/refresh/', {
+      const response = await axios.post(`${apiBaseUrl}/token/refresh/`, {
         refresh: tokens?.refresh,
       });
       const newAccessToken = response.data.access;
       setTokens((prev) => ({ ...prev, access: newAccessToken }));
-      localStorage.setItem('accessToken', newAccessToken);
+      safeLocalStorage.setItem('accessToken', newAccessToken);
       return newAccessToken;
     } catch (error) {
       console.error('Token yangilash xatosi:', error);
@@ -39,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (data: { username: string; password: string }) => {
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/api/auth/login/', {
+      const response = await axios.post(`${apiBaseUrl}/auth/login/`, {
         username: data.username,
         password: data.password,
       });
@@ -48,8 +100,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setTokens({ access, refresh });
       setUser(userData);
 
-      localStorage.setItem('accessToken', access);
-      localStorage.setItem('refreshToken', refresh);
+      safeLocalStorage.setItem('accessToken', access);
+      safeLocalStorage.setItem('refreshToken', refresh);
 
       console.log('Foydalanuvchi ma\'lumotlari:', userData);
       console.log('Access Token:', access);
@@ -67,15 +119,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     setTokens(null);
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    safeLocalStorage.removeItem('accessToken');
+    safeLocalStorage.removeItem('refreshToken');
   };
 
   const apiRequest = async (method: string, url: string, data: any = null) => {
     try {
       const config = {
         method,
-        url: `http://localhost:8000${url}`,
+        url: `${apiBaseUrl}${url}`,
         headers: {
           Authorization: `Bearer ${tokens?.access}`,
         },
@@ -99,8 +151,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const isAuthenticated = !!tokens?.access && !!user;
+
   return (
-    <AuthContext.Provider value={{ user, tokens, login, logout, apiRequest, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      tokens, 
+      login, 
+      logout, 
+      apiRequest, 
+      loading, 
+      isAuthenticated,
+      isLoading: loading 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import LoginForm from '@/components/LoginForm';
@@ -6,20 +7,37 @@ import CEODashboard from '@/components/dashboard/CEODashboard';
 import MentorDashboard from '@/components/dashboard/MentorDashboard';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 import StudentDashboard from '@/components/dashboard/StudentDashboard';
+import { Toaster } from "@/components/ui/toaster";
 
 const PrivateRoute = ({ children, allowedRoles }: { children: JSX.Element; allowedRoles: string[] }) => {
-  const { user, tokens } = useAuth();
+  const { user, tokens, loading } = useAuth();
+  
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>;
+  }
+  
   if (!tokens?.access || !user) {
     return <Navigate to="/login" />;
   }
+  
   if (!allowedRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" />;
   }
+  
   return children;
 };
 
 const RedirectToRoleDashboard = () => {
-  const { user, tokens } = useAuth();
+  const { user, tokens, loading } = useAuth();
+  
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>;
+  }
+  
   if (!tokens?.access || !user) {
     return <Navigate to="/login" />;
   }
@@ -49,7 +67,7 @@ function App() {
             <Route
               path="/dashboard/ceo"
               element={
-                <PrivateRoute allowedRoles={['ceo']}>
+                <PrivateRoute allowedRoles={['CEO']}>
                   <CEODashboard stats={[]} onTabChange={() => {}} />
                 </PrivateRoute>
               }
@@ -78,11 +96,12 @@ function App() {
                 </PrivateRoute>
               }
             />
-            <Route path="/unauthorized" element={<div>Ruxsat yo'q!</div>} />
+            <Route path="/unauthorized" element={<div className="p-4">Ruxsat yo'q!</div>} />
             <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/dashboard" element={<RedirectToRoleDashboard />} />
           </Routes>
         </div>
+        <Toaster />
       </Router>
     </AuthProvider>
   );

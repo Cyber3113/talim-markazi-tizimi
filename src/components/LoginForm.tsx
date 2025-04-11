@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useNavigate } from 'react-router-dom';
 import { LockKeyhole, User } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -21,6 +23,7 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -37,10 +40,19 @@ const LoginForm = () => {
     try {
       const success = await login(data);
       if (success) {
-        navigate('/dashboard'); // Rolga qarab yo'naltirish uchun
+        toast({
+          title: "Login successful",
+          description: "You have been logged in successfully.",
+        });
+        navigate('/dashboard'); // Redirect based on role
       }
     } catch (error) {
       setError(error.response?.data?.detail || 'Login yoki parol xato!');
+      toast({
+        title: "Login failed",
+        description: error.response?.data?.detail || 'Login yoki parol xato!',
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

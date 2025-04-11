@@ -1,13 +1,39 @@
-
 import { User, Group, Student, LoginFormData, UserRole, Attendance, Score } from "./types";
+import { getApiBaseUrl } from "./apiConfig";
 
-// Base API URL - replace with actual backend URL
-const API_BASE_URL = "http://127.0.0.1:8000/api"; // or your actual deployment URL
+// Safe localStorage access
+const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      return localStorage.getItem(key);
+    } catch (error) {
+      console.warn('localStorage access denied:', error);
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+      console.warn('localStorage access denied:', error);
+    }
+  },
+  removeItem: (key: string): void => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn('localStorage access denied:', error);
+    }
+  }
+};
 
 // Helper function for API requests
 const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
+  // Get API base URL
+  const API_BASE_URL = getApiBaseUrl();
+  
   // Get token from localStorage if available
-  const token = localStorage.getItem("eduAccessToken");
+  const token = safeLocalStorage.getItem("eduAccessToken");
   
   // Default headers
   const headers = {
@@ -32,8 +58,8 @@ const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
           return fetchApi(endpoint, options);
         } else {
           // Refresh failed - logout
-          localStorage.removeItem("eduAccessToken");
-          localStorage.removeItem("eduRefreshToken");
+          safeLocalStorage.removeItem("eduAccessToken");
+          safeLocalStorage.removeItem("eduRefreshToken");
           window.location.href = "/";
         }
       }
@@ -54,7 +80,8 @@ const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
 
 // Function to refresh the access token
 const refreshAccessToken = async (): Promise<boolean> => {
-  const refreshToken = localStorage.getItem("eduRefreshToken");
+  const API_BASE_URL = getApiBaseUrl();
+  const refreshToken = safeLocalStorage.getItem("eduRefreshToken");
   if (!refreshToken) return false;
   
   try {
@@ -72,7 +99,7 @@ const refreshAccessToken = async (): Promise<boolean> => {
     
     const data = await response.json();
     if (data.access) {
-      localStorage.setItem("eduAccessToken", data.access);
+      safeLocalStorage.setItem("eduAccessToken", data.access);
       return true;
     }
     
@@ -85,6 +112,8 @@ const refreshAccessToken = async (): Promise<boolean> => {
 
 // Auth endpoints
 export const apiLogin = async (data: LoginFormData) => {
+  const API_BASE_URL = getApiBaseUrl();
+  
   const response = await fetch(`${API_BASE_URL}/auth/login/`, {
     method: "POST",
     headers: {
@@ -101,8 +130,8 @@ export const apiLogin = async (data: LoginFormData) => {
   const responseData = await response.json();
   
   if (responseData.access && responseData.refresh) {
-    localStorage.setItem("eduAccessToken", responseData.access);
-    localStorage.setItem("eduRefreshToken", responseData.refresh);
+    safeLocalStorage.setItem("eduAccessToken", responseData.access);
+    safeLocalStorage.setItem("eduRefreshToken", responseData.refresh);
     return {
       token: responseData.access,
       user: responseData.user,
@@ -118,8 +147,8 @@ export const apiLogout = async () => {
   } catch (error) {
     console.error("Logout error:", error);
   } finally {
-    localStorage.removeItem("eduAccessToken");
-    localStorage.removeItem("eduRefreshToken");
+    safeLocalStorage.removeItem("eduAccessToken");
+    safeLocalStorage.removeItem("eduRefreshToken");
   }
 };
 
