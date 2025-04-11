@@ -16,28 +16,40 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Safe localStorage access function
+// Safe localStorage access function with memory fallback
+const memoryStorage: Record<string, string> = {};
 const safeLocalStorage = {
   getItem: (key: string): string | null => {
     try {
-      return localStorage.getItem(key);
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return localStorage.getItem(key);
+      }
+      return memoryStorage[key] || null;
     } catch (error) {
       console.warn('localStorage access denied:', error);
-      return null;
+      return memoryStorage[key] || null;
     }
   },
   setItem: (key: string, value: string): void => {
     try {
-      localStorage.setItem(key, value);
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(key, value);
+      }
+      memoryStorage[key] = value;
     } catch (error) {
       console.warn('localStorage access denied:', error);
+      memoryStorage[key] = value;
     }
   },
   removeItem: (key: string): void => {
     try {
-      localStorage.removeItem(key);
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem(key);
+      }
+      delete memoryStorage[key];
     } catch (error) {
       console.warn('localStorage access denied:', error);
+      delete memoryStorage[key];
     }
   }
 };

@@ -10,11 +10,8 @@ import StudentDashboard from '@/components/dashboard/StudentDashboard';
 import { Toaster } from "@/components/ui/toaster";
 import { useEffect } from 'react';
 import { initializeApi } from '@/lib/apiConfig';
-
-// Initialize API configuration
-useEffect(() => {
-  initializeApi();
-}, []);
+import Index from '@/pages/Index';
+import Dashboard from '@/components/Dashboard';
 
 const PrivateRoute = ({ children, allowedRoles }: { children: JSX.Element; allowedRoles: string[] }) => {
   const { user, tokens, loading } = useAuth();
@@ -64,6 +61,11 @@ const RedirectToRoleDashboard = () => {
 };
 
 function App() {
+  // Initialize API configuration from inside the component
+  useEffect(() => {
+    initializeApi();
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
@@ -71,6 +73,8 @@ function App() {
         <div className="pt-16">
           <Routes>
             <Route path="/login" element={<LoginForm />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route
               path="/dashboard/ceo"
               element={
@@ -104,8 +108,6 @@ function App() {
               }
             />
             <Route path="/unauthorized" element={<div className="p-4">Ruxsat yo'q!</div>} />
-            <Route path="/" element={<Navigate to="/login" />} />
-            <Route path="/dashboard" element={<RedirectToRoleDashboard />} />
           </Routes>
         </div>
         <Toaster />
