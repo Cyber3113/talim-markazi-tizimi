@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import LoginForm from '@/components/LoginForm';
@@ -76,7 +75,7 @@ function App() {
               path="/dashboard/mentor"
               element={
                 <PrivateRoute allowedRoles={['Mentor']}>
-                  <MentorDashboard stats={[]} userId={0} onTabChange={() => {}} />
+                  <MentorDashboard stats={[]} userId="" onTabChange={() => {}} />
                 </PrivateRoute>
               }
             />
@@ -92,7 +91,7 @@ function App() {
               path="/dashboard/student"
               element={
                 <PrivateRoute allowedRoles={['Student']}>
-                  <StudentDashboard stats={[]} userId={0} onTabChange={() => {}} />
+                  <StudentDashboard stats={[]} userId="" onTabChange={() => {}} />
                 </PrivateRoute>
               }
             />
