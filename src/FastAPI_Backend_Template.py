@@ -1,4 +1,3 @@
-
 """
 FastAPI Backend Template for O'quv Markazi Tizimi
 
@@ -43,9 +42,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 # CORS settings to allow frontend to connect
 origins = [
-    "http://localhost:5173",  # Vite dev server default
-    "http://localhost:3000",
-    "https://your-production-domain.com",
+    "http://192.168.1.4:8080",
+    "http://192.168.1.4:8000",
+    "http://localhost:8080",
+    "http://localhost:8000",
+    "*"  # Development uchun barcha domainlarga ruxsat berish
 ]
 
 # Define database models
@@ -590,17 +591,26 @@ async def add_score(
     db.refresh(db_score)
     return db_score
 
-# Top students endpoint
+# Top students endpoint - authentication dependency qo'shildi
 @app.get("/api/student/top/", response_model=List[Student])
 async def get_top_students(
     limit: int = 10,
-    db: Session = Depends(get_db), 
-    current_user: UserDB = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: UserDB = Depends(get_current_user)  # Faqat current_user qoldiramiz
 ):
     # Get students ordered by coins
     top_students = db.query(StudentDB).order_by(StudentDB.coins.desc()).limit(limit).all()
     return top_students
 
 if __name__ == "__main__":
-    # This file is designed to be run using uvicorn
-    print("Run this app using: uvicorn FastAPI_Backend_Template:app --reload")
+    try:
+        import uvicorn
+        print("Starting the server...")
+        uvicorn.run("FastAPI_Backend_Template:app", host="192.168.1.4", port=8000, reload=True)
+    except ImportError:
+        print("Error: uvicorn is not installed. Please install it using:")
+        print("pip install uvicorn")
+    except Exception as e:
+        print(f"Error starting the server: {str(e)}")
+        print("\nMake sure you have installed all required dependencies:")
+        print("pip install fastapi uvicorn sqlalchemy pydantic python-jose[cryptography] passlib[bcrypt] python-multipart")

@@ -8,7 +8,7 @@
 
 export const API_CONFIG = {
   // Default to local FastAPI development server
-  API_BASE_URL: "http://127.0.0.1:8000/api",
+  API_BASE_URL: "http://192.168.1.4:8000/api",
   
   // For production
   // API_BASE_URL: "https://your-fastapi-server.com/api",

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { apiGetTopStudents } from '@/lib/api';
+// import { apiGetTopStudents } from '@/lib/api';
 import { Student } from '@/lib/types';
 import { 
   Card, 
@@ -29,8 +29,8 @@ const TopStudents = () => {
     const fetchTopStudents = async () => {
       try {
         setIsLoading(true);
-        const students = await apiGetTopStudents(10);
-        setTopStudents(students);
+        // const students = await apiGetTopStudents(10);
+        // setTopStudents(students);
         setError(null);
       } catch (err) {
         console.error('Failed to fetch top students:', err);

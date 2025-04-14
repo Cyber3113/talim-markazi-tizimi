@@ -270,9 +270,16 @@ export const apiAddScore = async (data: {
 };
 
 // Top students
-export const apiGetTopStudents = async (limit = 10): Promise<Student[]> => {
-  return await fetchApi(`/student/top/?limit=${limit}`);
+const headers = {
+  'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+  'Content-Type': 'application/json'
 };
+
+// So'rovni yuborish
+fetch('/api/student/top/?limit=10', {
+  method: 'GET',
+  headers: headers
+})
 
 // Mentor endpoints
 export const apiGetMentors = async (): Promise<User[]> => {
